@@ -1,0 +1,29 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.dll
+*.exe
+*.pdb
+
+## IDE
+.idea/
+.vs/
+*.sln.DotSettings.user
+
+## Build artifacts
+BenchmarkDotNet.Artifacts/
+TestResults/
+
+## NuGet
+*.nupkg
+*.snupkg
+
+## OS
+.DS_Store
+Thumbs.db
+
+## Claude
+.claude/

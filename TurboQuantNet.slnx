@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="src/TurboQuant/TurboQuant.csproj" />
+  <Project Path="tests/TurboQuant.Tests/TurboQuant.Tests.csproj" />
+  <Project Path="benchmarks/TurboQuant.Benchmarks/TurboQuant.Benchmarks.csproj" />
+  <Project Path="samples/TurboQuant.Demo/TurboQuant.Demo.csproj" />
+</Solution>
