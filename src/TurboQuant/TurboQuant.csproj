@@ -5,7 +5,7 @@
     <IsTrimmable>true</IsTrimmable>
     <IsAotCompatible>true</IsAotCompatible>
     <PackageId>TurboQuant</PackageId>
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
     <Authors>Outmatic</Authors>
     <Description>High-performance online vector quantization based on TurboQuant (Zandieh et al., ICLR 2026). Near-optimal distortion rate with SIMD acceleration.</Description>
     <PackageTags>vector-quantization;embeddings;compression;simd;llm;kv-cache</PackageTags>

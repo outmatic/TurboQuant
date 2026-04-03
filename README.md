@@ -1,17 +1,14 @@
-<p align="center">
-  <h1 align="center">TurboQuant</h1>
-  <p align="center">
-    <strong>Near-optimal vector quantization for .NET</strong><br>
-    Compress embeddings to 2-4 bits with &lt;0.5% quality loss. Zero dependencies. AOT-ready.
-  </p>
-  <p align="center">
-    <a href="https://www.nuget.org/packages/TurboQuant"><img src="https://img.shields.io/nuget/v/TurboQuant?style=flat-square&color=004880" alt="NuGet"></a>
-    <a href="https://github.com/outmatic/TurboQuant/actions"><img src="https://img.shields.io/github/actions/workflow/status/outmatic/TurboQuant/ci.yml?style=flat-square" alt="Build"></a>
-    <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License"></a>
-    <img src="https://img.shields.io/badge/.NET-8%20%7C%2010-512bd4?style=flat-square" alt=".NET 8 | 10">
-    <img src="https://img.shields.io/badge/AOT-compatible-brightgreen?style=flat-square" alt="AOT">
-  </p>
-</p>
+# TurboQuant
+
+**Near-optimal vector quantization for .NET 8+**
+
+Compress embeddings to 2-4 bits with <0.5% quality loss. Zero dependencies. AOT-ready.
+
+[![NuGet](https://img.shields.io/nuget/v/TurboQuant?style=flat-square&color=004880)](https://www.nuget.org/packages/TurboQuant)
+[![Build](https://img.shields.io/github/actions/workflow/status/outmatic/TurboQuant/ci.yml?style=flat-square)](https://github.com/outmatic/TurboQuant/actions)
+[![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+![.NET](https://img.shields.io/badge/.NET-8%20%7C%2010-512bd4?style=flat-square)
+![AOT](https://img.shields.io/badge/AOT-compatible-brightgreen?style=flat-square)
 
 ---
 
