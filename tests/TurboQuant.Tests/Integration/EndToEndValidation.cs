@@ -336,6 +336,9 @@ public class EndToEndValidation
 
         var output = new PackedVector[batchSize];
 
+        // Warmup: prime JIT, ArrayPool, and Vector<T> type initialization
+        quantizer.QuantizeBatch(vectors.AsSpan(0, dim * 10), output.AsSpan(0, 10));
+
         var before = GC.GetTotalAllocatedBytes(precise: true);
         quantizer.QuantizeBatch(vectors, output);
         var after = GC.GetTotalAllocatedBytes(precise: true);
