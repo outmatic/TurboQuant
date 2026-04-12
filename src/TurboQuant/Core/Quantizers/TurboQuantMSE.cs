@@ -196,7 +196,7 @@ public sealed class TurboQuantMSE : IVectorQuantizer
         var count = vectors.Length / _dim;
         ArgumentOutOfRangeException.ThrowIfLessThan(output.Length, count, nameof(output));
 
-        for (int i = 0; i < count; i++)
+        for (var i = 0; i < count; i++)
             output[i] = Quantize(vectors.Slice(i * _dim, _dim));
     }
 

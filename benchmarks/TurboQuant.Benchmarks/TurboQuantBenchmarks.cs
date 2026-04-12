@@ -3,6 +3,7 @@ using BenchmarkDotNet.Running;
 using TurboQuant;
 using TurboQuant.Core.Packing;
 using TurboQuant.Core.Quantizers;
+using TurboQuant.Core.Rotation;
 using TurboQuant.Core.Simd;
 
 namespace TurboQuant.Benchmarks;
@@ -67,10 +68,46 @@ public class TurboQuantBenchmarks
     public float L2Norm_SIMD() => DotProductSimd.L2Norm(_vector);
 }
 
+[MemoryDiagnoser]
+[SimpleJob]
+public class HadamardBenchmarks
+{
+    private HadamardRotation _rotation = null!;
+    private float[] _vector = null!;
+
+    [Params(256, 768, 1024)]
+    public int Dimension { get; set; }
+
+    [GlobalSetup]
+    public void Setup()
+    {
+        _rotation = new HadamardRotation(Dimension, seed: 42);
+
+        var paddedDim = _rotation.PaddedDimension;
+        _vector = new float[paddedDim];
+        var rng = new Random(42);
+        for (var i = 0; i < Dimension; i++)
+            _vector[i] = (float)(rng.NextDouble() * 2 - 1);
+    }
+
+    [Benchmark]
+    public void HadamardTransform() => _rotation.Transform(_vector);
+
+    [Benchmark]
+    public void HadamardInverse() => _rotation.InverseTransform(_vector);
+
+    [Benchmark]
+    public void HadamardRoundTrip()
+    {
+        _rotation.Transform(_vector);
+        _rotation.InverseTransform(_vector);
+    }
+}
+
 public class Program
 {
     public static void Main(string[] args)
     {
-        BenchmarkRunner.Run<TurboQuantBenchmarks>();
+        BenchmarkRunner.Run(new[] { typeof(TurboQuantBenchmarks), typeof(HadamardBenchmarks) }, args: args);
     }
 }
