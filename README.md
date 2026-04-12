@@ -156,23 +156,28 @@ var allValues = window.GetAllValues();
 public class CompressedMemoryStore : IMemoryStore
 {
     private readonly TurboQuantMSE _quantizer;
-    private readonly ConcurrentDictionary<string, (PackedVector Vec, MemoryRecord Rec)> _data = new();
+    private readonly ConcurrentDictionary<string,
+        ConcurrentDictionary<string, (PackedVector Vec, MemoryRecord Rec)>> _collections = new();
 
     public CompressedMemoryStore(int dim) =>
         _quantizer = TurboQuantBuilder.Create(dim).WithBits(4).BuildMSE();
 
     public Task<string> UpsertAsync(string collection, MemoryRecord record, CancellationToken ct)
     {
+        var store = _collections.GetOrAdd(collection, _ => new());
         var packed = _quantizer.Quantize(record.Embedding.Vector.ToArray());
-        _data[record.Metadata.Id] = (packed, record);
+        store[record.Metadata.Id] = (packed, record);
         return Task.FromResult(record.Metadata.Id);
     }
 
     public Task<MemoryRecord?> GetNearestMatchAsync(
         string collection, ReadOnlyMemory<float> query, double minScore, CancellationToken ct)
     {
+        if (!_collections.TryGetValue(collection, out var store))
+            return Task.FromResult<MemoryRecord?>(null);
+
         var qPacked = _quantizer.Quantize(query.Span);
-        return Task.FromResult(_data.Values
+        return Task.FromResult(store.Values
             .Select(d => (d.Rec, Score: (double)_quantizer.ApproxSimilarity(qPacked, d.Vec)))
             .Where(x => x.Score >= minScore)
             .MaxBy(x => x.Score).Rec);
