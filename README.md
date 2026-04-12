@@ -150,6 +150,60 @@ var allValues = window.GetAllValues();
 
 **32 layers x 32 heads x 4K tokens x 128d: 32 GB -> ~6 GB**
 
+### Microsoft Agent Framework: Compressed RAG
+
+```csharp
+using Microsoft.Agents.AI;
+using Microsoft.Agents.AI.ChatCompletion;
+using TurboQuant;
+
+// Compressed document store
+var quantizer = TurboQuantBuilder.Create(dim: 768).WithBits(4).BuildMSE();
+var docs = new Dictionary<string, (PackedVector Vec, string Title, string Text, string Link)>();
+
+// Index documents (once)
+foreach (var doc in documents)
+{
+    var embedding = await embeddingModel.GenerateAsync(doc.Text);
+    docs[doc.Id] = (quantizer.Quantize(embedding), doc.Title, doc.Text, doc.Link);
+}
+
+// Search adapter: quantize query, find top matches via ApproxSimilarity
+Task<IEnumerable<TextSearchProvider.TextSearchResult>> SearchAdapter(
+    string query, CancellationToken ct)
+{
+    var queryEmbedding = embeddingModel.Generate(query);
+    var queryPacked = quantizer.Quantize(queryEmbedding);
+
+    var results = docs.Values
+        .Select(d => (d, Score: quantizer.ApproxSimilarity(queryPacked, d.Vec)))
+        .OrderByDescending(x => x.Score)
+        .Take(5)
+        .Select(x => new TextSearchProvider.TextSearchResult
+        {
+            Text = x.d.Text,
+            SourceName = x.d.Title,
+            SourceLink = x.d.Link
+        });
+
+    return Task.FromResult(results);
+}
+
+// Create agent with compressed RAG
+var agent = azureOpenAIClient
+    .GetChatClient(deploymentName)
+    .AsAIAgent(new ChatClientAgentOptions
+    {
+        ChatOptions = new() { Instructions = "Answer questions using the provided context." },
+        AIContextProviders = [new TextSearchProvider(SearchAdapter, new()
+        {
+            SearchTime = TextSearchProviderOptions.TextSearchBehavior.BeforeAIInvoke
+        })]
+    });
+```
+
+**100K documents (768d): 292 MB -> 37 MB in the search adapter, 66 ns per similarity comparison.**
+
 ### Semantic Kernel: Compressed Memory
 
 ```csharp
