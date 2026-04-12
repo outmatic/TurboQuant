@@ -196,8 +196,26 @@ public sealed class TurboQuantMSE : IVectorQuantizer
         var count = vectors.Length / _dim;
         ArgumentOutOfRangeException.ThrowIfLessThan(output.Length, count, nameof(output));
 
-        for (int i = 0; i < count; i++)
-            output[i] = Quantize(vectors.Slice(i * _dim, _dim));
+        // Parallel threshold: amortize thread pool + ToArray overhead.
+        // Each Quantize is O(d^2) for RandomRotation or O(d log d) for Hadamard,
+        // so parallelism only pays for large batches.
+        var parallelThreshold = Math.Max(Environment.ProcessorCount * 4, 32);
+
+        if (count <= parallelThreshold)
+        {
+            for (var i = 0; i < count; i++)
+                output[i] = Quantize(vectors.Slice(i * _dim, _dim));
+            return;
+        }
+
+        var vecArray = vectors.ToArray();
+        var results = new PackedVector[count];
+        var dim = _dim;
+
+        Parallel.For(0, count, i =>
+            results[i] = Quantize(vecArray.AsSpan(i * dim, dim)));
+
+        results.AsSpan().CopyTo(output);
     }
 
     /// <inheritdoc/>

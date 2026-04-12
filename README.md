@@ -63,12 +63,18 @@ Benchmarked on Apple Silicon (ARM64), .NET 10, Release mode:
 
 | Operation | dim=256 | dim=768 | Heap Alloc |
 |-----------|---------|---------|------------|
-| `Quantize` | 44 us | 44 us | 152 B |
+| `Quantize` | 8 us | 57 us | 152 B |
 | `Dequantize` | 42 us | 42 us | 1 KB |
-| `ApproxSimilarity` | 1.2 us | 0.8 us | **0 B** |
-| `DotProduct` (SIMD) | 136 ns | 505 ns | **0 B** |
+| `ApproxSimilarity` | 0.2 us | 0.8 us | **0 B** |
+| `DotProduct` (SIMD) | 20 ns | 66 ns | **0 B** |
+| `L2Norm` (SIMD) | 13 ns | 51 ns | **0 B** |
+| `CosineSimilarity` (SIMD) | 35 ns | 126 ns | **0 B** |
+
+SIMD operations use `Vector<T>` for automatic ISA selection (NEON on ARM, SSE/AVX2/AVX-512 on x86) with dual accumulators to hide data-dependency latency.
 
 `ApproxSimilarity` uses a precomputed 16x16 lookup table for 4-bit. No unpacking, no centroid lookup. Direct byte-level scan.
+
+`QuantizeBatch` automatically parallelizes across cores for large batches (threshold: `ProcessorCount * 4`).
 
 ## Compression Quality
 
@@ -236,8 +242,8 @@ var fast = TurboQuantBuilder.Create(dim: 1024).WithBits(4).WithHadamardRotation(
 | **Time** | O(d^2) | O(d log d) |
 | **Memory** | O(d^2) per quantizer | O(d) per quantizer |
 | **Packed size** | Exact (d coordinates) | Exact if power-of-2, padded otherwise |
-| **dim=768 quantize** | ~400 us | ~44 us (but 33% more storage) |
-| **dim=1024 quantize** | ~700 us | ~50 us (no padding) |
+| **dim=768 quantize** | ~57 us | ~1.3 us (but 33% more storage) |
+| **dim=1024 quantize** | ~100 us | ~1.6 us (no padding) |
 | **D_mse** | = theoretical | = theoretical (power-of-2), better (non-power-of-2) |
 
 **Best practice:** if your embedding model supports configurable dimensions (e.g. OpenAI, nomic), choose a power-of-2 dimension (512, 1024) to get the best of both strategies.
@@ -279,7 +285,7 @@ src/TurboQuant/
     Codebook/       BetaCodebook (Lloyd-Max on exact Beta distribution, with LUT)
     Packing/        BitPacker (2/3/4-bit), PackedVector (serializable, immutable)
     Quantizers/     TurboQuantMSE, TurboQuantAsymmetric
-    Simd/           DotProductSimd (AVX2/SSE2/NEON via .NET intrinsics)
+    Simd/           DotProductSimd (Vector<T> auto-ISA: NEON/SSE/AVX2/AVX-512)
   Cache/            KVCache, ResidualWindow
   Diagnostics/      CompressionStats (thread-safe), QuantizationBenchmark
   TurboQuantBuilder.cs
